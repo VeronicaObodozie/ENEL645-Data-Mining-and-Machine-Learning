@@ -1,0 +1,8 @@
+pip3 install torch torchvision torchaudio
+pip install transformers
+pip install torchmetrics
+pip install torchviz
+
+c:\python38\lib\site-packages
+
+# What will the model look like

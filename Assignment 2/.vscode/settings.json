@@ -1,0 +1,7 @@
+{
+    "python.globalModuleInstallation": true,
+    "python.autoComplete.extraPaths": [
+
+    ],
+    "python.defaultInterpreterPath": "python38"
+}
