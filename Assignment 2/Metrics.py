@@ -21,8 +21,8 @@ import numpy as np
 
 import os
 import re
-import torchmetrics
-from torchmetrics.classification import MultilabelConfusionMatrix
+from sklearn.metrics import confusion_matrix, f1_score, accuracy_score
+import seaborn as sns
 
 ##-----------------------------------------------------------------------------------------------------------##
 #-------------- Metrics -------------#
@@ -46,27 +46,55 @@ def metrics_eval(model, loader, device):
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            # append true and predicted labels
+            y_true.append(labels.cpu().numpy())
+            y_pred.append(predicted.cpu().numpy())
     
-        y_pred.extend(predicted.cpu().numpy())
-        y_true.extend(labels.cpu().numpy())
-        # convert to tensors
-        y_pred_tensor = torch.tensor(y_pred)
-        y_true_tensor = torch.tensor(y_true)
-        # Calculating Recall, Precision, F1 Score, Accuracy
-        TP= ((y_pred_tensor == 1)&(y_true_tensor == 1)).sum().item()
-        FP= ((y_pred_tensor == 1)&(y_true_tensor == 0)).sum().item()
-        TN= ((y_pred_tensor == 0)&(y_true_tensor == 0)).sum().item()
-        FN= ((y_pred_tensor == 0)&(y_true_tensor == 1)).sum().item()
-        precision = TP / (TP + FP) if TP + FP > 0 else 0
-        recall = TP / (TP + FN) if TP + FN > 0 else 0
-        f1 =2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+        # y_pred.extend(predicted.cpu().numpy())
+        # y_true.extend(labels.cpu().numpy())
+        # # convert to tensors
+        # y_pred_tensor = torch.tensor(y_pred)
+        # y_true_tensor = torch.tensor(y_true)
+        # # Calculating Recall, Precision, F1 Score, Accuracy
+        # TP= ((y_pred_tensor == 1)&(y_true_tensor == 1)).sum().item()
+        # FP= ((y_pred_tensor == 1)&(y_true_tensor == 0)).sum().item()
+        # TN= ((y_pred_tensor == 0)&(y_true_tensor == 0)).sum().item()
+        # FN= ((y_pred_tensor == 0)&(y_true_tensor == 1)).sum().item()
+        # precision = TP / (TP + FP) if TP + FP > 0 else 0
+        # recall = TP / (TP + FN) if TP + FN > 0 else 0
+        # f1 =2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
         accuracy =100 * correct / total
-        print(f'F1-SCORE: {f1}')
+        # print(f'F1-SCORE: {f1}')
+        print(f'Accuracy of the network on the 10000 test images: {accuracy} % manual calc')
+        
+
+        # #CONFUSION MATRIX
+        # metric = torchmetrics.classification.MulticlassConfusionMatrix(num_classes=4)
+        # metric(y_pred_tensor, y_true_tensor)
+        # fig_, ax_ = metric.plot()
+
+                # calculate macro F1 score
+        y_true = np.concatenate(y_true)
+        y_pred = np.concatenate(y_pred)
+        f1_macro = f1_score(y_true, y_pred, average='macro')
+
+        # calculate micro F1 score 
+        f1_micro = f1_score(y_true, y_pred, average='micro')
+        print(f'F1-SCORE of the netwwork is given ass micro: {f1_micro}, macro: {f1_macro}')
+        
+        # ACCURACY
+        accuracy = 100*accuracy_score(y_true, y_pred, normalize=True)
         print(f'Accuracy of the network on the 10000 test images: {accuracy} %')
         
-        #CONFUSION MATRIX
-        metric = torchmetrics.classification.MulticlassConfusionMatrix(num_classes=4)
-        metric(y_pred_tensor, y_true_tensor)
-        fig_, ax_ = metric.plot()
+        # #CONFUSION MATRIX
+        cm = confusion_matrix(y_true, y_pred)
 
+        # Plot confusion matrix
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', cbar=False)
+
+        plt.title('Confusion Matrix')
+        plt.xlabel('Predicted Labels')
+        plt.ylabel('True Labels')
+        plt.show()
 ##-----------------------------------------------------------------------------------------------------------##

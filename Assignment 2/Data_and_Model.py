@@ -14,7 +14,7 @@ import torchvision.transforms as transforms # transforms used in the pre-process
 from torchvision import *
 
 from PIL import Image
-from torchvision.models import resnet18
+from torchvision.models import resnet18, resnet50, ResNet50_Weights
 from transformers import DistilBertModel, DistilBertTokenizer
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
@@ -112,22 +112,24 @@ class GarbageModel(nn.Module):
         self.input_shape = input_shape
 
         # Image feature extraction layer
-        self.feature_extractor = resnet18(weights=transfer)
-        #self.feature_extractor = models.resnet50(pretrained=True)
+        #self.feature_extractor = resnet18(weights=transfer)
+        self.feature_extractor = resnet50(weights=ResNet50_Weights.DEFAULT)
         if self.transfer:
             # layers are frozen by using eval()
             self.feature_extractor.eval()
             # freeze params
             for param in self.feature_extractor.parameters():
                 param.requires_grad = False
+        self.drop1 = nn.Dropout(0.4)
         n_features = self._get_conv_output(self.input_shape)
-        self.image_features = nn.Linear(n_features, 256)
+        self.image_features = nn.Linear(n_features, 128)
         #handling Text
         self.distilbert = DistilBertModel.from_pretrained('distilbert-base-uncased')
+        self.fc1 = nn.Linear(self.distilbert.config.hidden_size, 128)
         self.drop = nn.Dropout(0.3)
-        self.fc1 = nn.Linear(self.distilbert.config.hidden_size, 256)
         ## Setting up Model Classifier
-        self.classifier = nn.Linear(512, num_classes)
+        self.dense = nn.Linear(256, 64)
+        self.classifier = nn.Linear(64, num_classes)
 
 # this gets the number of filters from the feature extractor output
     def _get_conv_output(self, shape):
@@ -141,17 +143,20 @@ class GarbageModel(nn.Module):
     # will be used during inference
     def forward(self, image, input_ids, attention_mask):
        # Image feature layers
-       image_features = self.feature_extractor(image)
+       image_features = self.feature_extractor(image) # RessNet50 transfer learning
+       image_features = self.drop1(image_features) #dropout
        image_features = self.image_features(image_features)
-       #image_features = F.relu(image_features)
-       #image_features = self.dropout(image_features)
 
        # Text feature layers
        text_features = self.distilbert(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state[:, -1, :]
        text_features = self.fc1(text_features)
-       #text_features = self.drop(text_features[:,0])
+       text_features = self.drop(text_features)
 
        # merged features for classifier
        features = torch.cat((image_features, text_features), dim=-1)
+       #features = F.gelu(features)
+       features = self.dense(features)
        x = self.classifier(features)
+       x= F.log_softmax(x, dim=1)
        return x
+
