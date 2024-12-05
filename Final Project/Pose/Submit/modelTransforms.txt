@@ -1,0 +1,45 @@
+https://wandb.ai/site
+
+resnet50, ResNet50_Weights, inception_v3, Inception_V3_Weights, efficientnet_b7, EfficientNet_B7_Weights
+
+Resnet50
+data_transforms = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+
+Convnext
+https://pytorch.org/vision/stable/models/convnext.html
+
+data_transforms = transforms.Compose([
+    transforms.Resize(232),
+    transforms.CenterCrop(2224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+
+https://pytorch.org/vision/main/_modules/torchvision/models/convnext.html#convnext_base
+https://pytorch.org/vision/main/models/generated/torchvision.models.convnext_base.html#torchvision.models.convnext_base
+
+Inception V3 net
+https://pytorch.org/vision/stable/models/generated/torchvision.models.inception_v3.html#torchvision.models.inception_v3
+
+transforms.Compose([
+    transforms.Resize(299),
+    transforms.CenterCrop(299),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+
+
+EfficientNet
+transforms.Compose([
+    transforms.Resize(600),
+    transforms.CenterCrop(600),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+https://pytorch.org/vision/main/models/generated/torchvision.models.efficientnet_b7.html
+https://pytorch.org/vision/main/_modules/torchvision/models/efficientnet.html#efficientnet_b7
+
+
+DarkNet
+https://github.com/yakhyo/darknet-pytorch/blob/main/main.py
